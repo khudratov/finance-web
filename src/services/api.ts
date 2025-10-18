@@ -28,3 +28,9 @@ export const categoryAPI = {
   create: (data: Omit<Category, 'id'>) =>
     api.post<Category>('/categories', data)
 };
+
+export const dataAPI = {
+  exportData: () => api.get('/data/export'),
+  importData: (data: { transactions: Transaction[]; categories: Category[]; replaceExisting: boolean }) =>
+    api.post('/data/import', data)
+};

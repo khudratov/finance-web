@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Transaction, Category, Summary } from './types';
-import { transactionAPI, categoryAPI } from './services/api';
+import { transactionAPI, categoryAPI, dataAPI } from './services/api';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import SummaryCard from './components/SummaryCard';
@@ -16,6 +16,7 @@ function App() {
   });
   const [loading, setLoading] = useState(true);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -81,6 +82,65 @@ function App() {
     }
   };
 
+  const handleExportData = async () => {
+    try {
+      const response = await dataAPI.exportData();
+      const dataStr = JSON.stringify(response.data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `finance-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Failed to export data');
+    }
+  };
+
+  const handleImportData = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const fileContent = await file.text();
+      const data = JSON.parse(fileContent);
+
+      if (!data.transactions || !data.categories) {
+        alert('Invalid data format');
+        return;
+      }
+
+      const replaceExisting = confirm(
+        'Do you want to replace all existing data?\n\nClick OK to replace everything, or Cancel to merge with existing data.'
+      );
+
+      await dataAPI.importData({
+        transactions: data.transactions,
+        categories: data.categories,
+        replaceExisting
+      });
+
+      fetchData();
+      alert('Data imported successfully!');
+    } catch (error) {
+      console.error('Error importing data:', error);
+      alert('Failed to import data. Please check the file format.');
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -94,6 +154,21 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>💰 Finance Tracker</h1>
+        <div className="header-actions">
+          <button onClick={handleExportData} className="btn btn-export">
+            Export Data
+          </button>
+          <button onClick={handleImportData} className="btn btn-import">
+            Import Data
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+        </div>
       </header>
 
       <main className="main">
