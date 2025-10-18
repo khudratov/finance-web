@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Transaction, Category, Summary } from '../types';
 
 
-const BASE_URL = "185.247.117.163:3002";
+const BASE_URL = "http://185.247.117.163:3002";
 const API_URL = BASE_URL + '/api';
 
 const api = axios.create({
