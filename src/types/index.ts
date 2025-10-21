@@ -23,3 +23,15 @@ export interface Summary {
   totalPending: number;
   balanceWithPending: number;
 }
+
+export interface RecurringExpense {
+  id: string;
+  name: string;
+  amount: number;
+  description: string;
+  dayOfMonth: number;
+  category: string;
+  categoryColor: string;
+  isActive: boolean;
+  createdAt: string;
+}

@@ -4,9 +4,12 @@ import { transactionAPI, categoryAPI, dataAPI } from './services/api';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import SummaryCard from './components/SummaryCard';
+import Dashboard from './components/Dashboard';
+import Sidebar from './components/Sidebar';
 import './App.css';
 
 function App() {
+  const [currentView, setCurrentView] = useState<'dashboard' | 'transactions'>('dashboard');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [summary, setSummary] = useState<Summary>({
@@ -141,7 +144,7 @@ function App() {
     }
   };
 
-  if (loading) {
+  if (loading && currentView === 'transactions') {
     return (
       <div className="loading">
         <div className="spinner"></div>
@@ -151,52 +154,65 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header className="header">
-        <h1>💰 Finance Tracker</h1>
-        <div className="header-actions">
-          <button onClick={handleExportData} className="btn btn-export">
-            Export Data
-          </button>
-          <button onClick={handleImportData} className="btn btn-import">
-            Import Data
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-        </div>
-      </header>
+    <div className="app-layout">
+      <Sidebar
+        currentView={currentView}
+        onNavigate={(view) => setCurrentView(view)}
+      />
 
-      <main className="main">
-        <SummaryCard summary={summary} />
+      <div className="app-content">
+        {currentView === 'dashboard' ? (
+          <Dashboard />
+        ) : (
+          <div className="app">
+            <header className="header">
+              <h1>💰 Finance Tracker</h1>
+              <div className="header-actions">
+                <button onClick={handleExportData} className="btn btn-export">
+                  Export Data
+                </button>
+                <button onClick={handleImportData} className="btn btn-import">
+                  Import Data
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            </header>
 
-        <div className="content">
-          <div className="form-section">
-            <h2>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</h2>
-            <TransactionForm
-              categories={categories}
-              onSubmit={handleAddTransaction}
-              editingTransaction={editingTransaction}
-              onCancelEdit={handleCancelEdit}
-            />
+            <main className="main">
+              <SummaryCard summary={summary} />
+
+              <div className="content">
+                <div className="form-section">
+                  <h2>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</h2>
+                  <TransactionForm
+                    categories={categories}
+                    onSubmit={handleAddTransaction}
+                    editingTransaction={editingTransaction}
+                    onCancelEdit={handleCancelEdit}
+                  />
+                </div>
+
+                <div className="list-section">
+                  <h2>Recent Transactions</h2>
+                  <TransactionList
+                    transactions={transactions}
+                    categories={categories}
+                    onEdit={handleEditTransaction}
+                    onDelete={handleDeleteTransaction}
+                    onComplete={handleCompleteTransaction}
+                  />
+                </div>
+              </div>
+            </main>
           </div>
-
-          <div className="list-section">
-            <h2>Recent Transactions</h2>
-            <TransactionList
-              transactions={transactions}
-              categories={categories}
-              onEdit={handleEditTransaction}
-              onDelete={handleDeleteTransaction}
-              onComplete={handleCompleteTransaction}
-            />
-          </div>
-        </div>
-      </main>
+        )}
+      </div>
     </div>
   );
 }

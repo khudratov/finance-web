@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Transaction, Category, Summary } from '../types';
+import { Transaction, Category, Summary, RecurringExpense } from '../types';
 
 
 const BASE_URL = "http://185.247.117.163:3002";
@@ -35,4 +35,15 @@ export const dataAPI = {
   exportData: () => api.get('/data/export'),
   importData: (data: { transactions: Transaction[]; categories: Category[]; replaceExisting: boolean }) =>
     api.post('/data/import', data)
+};
+
+export const recurringExpenseAPI = {
+  getAll: () => api.get<RecurringExpense[]>('/recurring-expenses'),
+  getById: (id: string) => api.get<RecurringExpense>(`/recurring-expenses/${id}`),
+  create: (data: Omit<RecurringExpense, 'id' | 'createdAt' | 'categoryColor'>) =>
+    api.post<RecurringExpense>('/recurring-expenses', data),
+  update: (id: string, data: Partial<RecurringExpense>) =>
+    api.put<RecurringExpense>(`/recurring-expenses/${id}`, data),
+  delete: (id: string) => api.delete(`/recurring-expenses/${id}`),
+  getMonthlySummary: () => api.get<{ monthlyTotal: number; count: number }>('/recurring-expenses/summary/monthly')
 };
